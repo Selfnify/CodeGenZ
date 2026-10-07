@@ -1,0 +1,13 @@
+{
+  "name": "codegenz",
+  "version": "0.1.0",
+  "description": "Node.js port of the CodeGenZ compiler",
+  "main": "src/cli.js",
+  "bin": {
+    "genz-js": "src/cli.js"
+  },
+  "scripts": {
+    "build": "node src/cli.js build"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,53 @@
+page "Counter"
+
+style:
+  body:
+    bg #111
+    color white
+    font system-ui, sans-serif
+    center
+    pad 60px
+
+  .count:
+    size 72px
+    weight 800
+
+  .row:
+    flex
+    gap 12px
+    justify center
+
+  .btn:
+    bg #222
+    color white
+    border 1px solid #444
+    pad 10px 20px
+    round 8px
+    pointer
+
+var count = 0
+
+h1 "Counter" .count #count-display
+
+box .row:
+  button "-" .btn click decrement()
+  button "reset" .btn click reset()
+  button "+" .btn click increment()
+
+script:
+  function render() {
+    document.getElementById("count-display").textContent = count
+  }
+  function increment() {
+    count = count + 1
+    render()
+  }
+  function decrement() {
+    count = count - 1
+    render()
+  }
+  function reset() {
+    count = 0
+    render()
+  }
+  render()

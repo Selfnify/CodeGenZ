@@ -1,0 +1,75 @@
+page "CodeGenZ Landing"
+
+style:
+  body:
+    bg #0b0b12
+    color #eaeaf5
+    font "Inter", system-ui, sans-serif
+    pad 0
+
+  .nav:
+    flex
+    justify space-between
+    align center
+    pad 20px 40px
+    bg #14141f
+
+  .hero:
+    pad 80px 40px
+    center
+
+  .hero-title:
+    size 56px
+    weight 900
+
+  .hero-sub:
+    size 18px
+    color #a3a3c2
+    pad 10px 0
+
+  .cta:
+    bg linear-gradient(90deg, #7c5cff, #ff5ca8)
+    color white
+    pad 14px 32px
+    round 999px
+    pointer
+    border none
+
+  .features:
+    flex
+    gap 24px
+    pad 40px
+    justify center
+
+  .card:
+    bg #14141f
+    pad 24px
+    round 16px
+    width 240px
+
+box .nav:
+  span "CodeGenZ" .logo
+  a "docs" href="docs/SYNTAX.md"
+
+box .hero:
+  h1 "Ship a webpage before your coffee goes cold" .hero-title
+  p "CodeGenZ compiles to plain HTML, CSS and JS. No build step, no framework fatigue." .hero-sub
+  button "Get started" .cta click scrollToFeatures()
+
+box .features:
+  box .card:
+    h3 "Readable"
+    p "Indentation-based syntax, no closing tags, no semicolon hunting."
+
+  box .card:
+    h3 "Honest output"
+    p "Real HTML/CSS/JS files you can open, read and ship anywhere."
+
+  box .card:
+    h3 "Escape hatch"
+    p "Need real JS? Drop into a script block whenever you want."
+
+script:
+  function scrollToFeatures() {
+    document.querySelector(".features").scrollIntoView({ behavior: "smooth" })
+  }
