@@ -26,6 +26,10 @@ if (-not $PythonCmd) {
 }
 
 Info "Installing CodeGenZ into $InstallDir"
+# if we're currently sitting inside the folder we're about to wipe
+# (e.g. re-running the installer from compiler-py), Windows refuses
+# to delete it - hop out to a safe neutral directory first.
+Set-Location $env:USERPROFILE
 if (Test-Path $InstallDir) { Remove-Item -Recurse -Force $InstallDir }
 $prevEap = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
