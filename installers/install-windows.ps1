@@ -1,0 +1,59 @@
+# CodeGenZ installer (Windows)
+#
+#   irm https://raw.githubusercontent.com/enderairstudio/CodeGenZ/main/installers/install-windows.ps1 | iex
+#
+# Clones the repo into %USERPROFILE%\.codegenz, installs the Python
+# compiler as a real `genz` command, and adds it to your PATH.
+
+$ErrorActionPreference = "Stop"
+
+$RepoUrl = "https://github.com/enderairstudio/CodeGenZ.git"
+$InstallDir = Join-Path $env:USERPROFILE ".codegenz"
+
+function Info($msg) { Write-Host "==> $msg" }
+function Fail($msg) { Write-Error $msg; exit 1 }
+
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Fail "git is required but not found. Install it from https://git-scm.com and re-run."
+}
+
+$PythonCmd = $null
+foreach ($candidate in @("python", "py")) {
+    if (Get-Command $candidate -ErrorAction SilentlyContinue) { $PythonCmd = $candidate; break }
+}
+if (-not $PythonCmd) {
+    Fail "Python is required but not found. Install it from https://python.org (check 'Add to PATH') and re-run."
+}
+
+Info "Installing CodeGenZ into $InstallDir"
+if (Test-Path $InstallDir) { Remove-Item -Recurse -Force $InstallDir }
+git clone --depth 1 $RepoUrl $InstallDir | Out-Null
+
+Info "Installing the genz CLI (pip --user)"
+Set-Location (Join-Path $InstallDir "compiler-py")
+& $PythonCmd -m pip install --user -e . 2>$null
+if ($LASTEXITCODE -ne 0) {
+    # modern Python installs may refuse system-wide installs (PEP 668);
+    # --user -e into our own prefix is safe to override
+    & $PythonCmd -m pip install --user --break-system-packages -e .
+    if ($LASTEXITCODE -ne 0) { Fail "pip install failed" }
+}
+
+$UserBase = (& $PythonCmd -m site --user-base).Trim()
+$ScriptsDir = Join-Path $UserBase "Scripts"
+
+$CurrentPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if ($CurrentPath -notlike "*$ScriptsDir*") {
+    $NewPath = if ([string]::IsNullOrEmpty($CurrentPath)) { $ScriptsDir } else { "$CurrentPath;$ScriptsDir" }
+    [Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
+    Info "Added $ScriptsDir to your user PATH"
+}
+
+Write-Host ""
+Write-Host "CodeGenZ installed."
+Write-Host ""
+Write-Host "  Open a NEW terminal window, then:"
+Write-Host "    genz build path\to\site.gz -o dist\"
+Write-Host ""
+Write-Host "  Examples live in: $InstallDir\examples"
+Write-Host "  Language reference: $InstallDir\docs\SYNTAX.md"

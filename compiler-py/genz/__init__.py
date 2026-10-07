@@ -13,7 +13,7 @@ from .codegen_html import generate_html
 from .codegen_css import generate_css
 from .codegen_js import generate_js
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __all__ = [
     "tokenize", "parse", "generate_html", "generate_css", "generate_js",
     "LexError", "ParseError", "compile_source",

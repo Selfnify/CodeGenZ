@@ -55,6 +55,32 @@ Both implement the exact same lexer → parser → codegen pipeline and
 produce **byte-identical output** on every example in this repo. Use
 whichever fits your stack; pick on vibes otherwise.
 
+## Install
+
+One-liner installers that set up a real `genz` command on your PATH
+(Python-based, so Node isn't required just to use the CLI):
+
+**macOS / Linux**
+```sh
+curl -fsSL https://raw.githubusercontent.com/enderairstudio/CodeGenZ/main/installers/install-mac.sh | bash
+```
+
+**Windows (PowerShell)**
+```powershell
+irm https://raw.githubusercontent.com/enderairstudio/CodeGenZ/main/installers/install-windows.ps1 | iex
+```
+
+Both clone the repo into `~/.codegenz` (`%USERPROFILE%\.codegenz` on
+Windows) and `pip install --user -e` the Python compiler, so `genz` is
+a real command afterward:
+
+```sh
+genz build path/to/site.gz -o dist/
+```
+
+Prefer no installer? Skip straight to **Quick start** below and run
+either compiler directly from a clone.
+
 ## Quick start
 
 ### Python
@@ -109,6 +135,9 @@ CodeGenZ/
 │   ├── hello.gz
 │   ├── landing.gz
 │   └── counter.gz
+├── installers/           # one-line installers (see Install above)
+│   ├── install-mac.sh
+│   └── install-windows.ps1
 └── docs/
     ├── SYNTAX.md          # full language reference
     └── EXAMPLES.md        # walkthrough of each example
@@ -131,9 +160,10 @@ event verbs, live in [`docs/SYNTAX.md`](docs/SYNTAX.md).
 
 ## Status
 
-v0.1 — core language works end to end, both compilers tested against
-all three bundled examples with matching output. No component system,
-no pseudo-selectors, no package manager yet. Contributions welcome.
+v1.0.0 — core language works end to end, both compilers tested against
+all three bundled examples with matching output, one-line installers
+for macOS/Linux/Windows. No component system, no pseudo-selectors
+yet. See [`CHANGELOG.md`](CHANGELOG.md). Contributions welcome.
 
 ## License
 
