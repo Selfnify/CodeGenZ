@@ -27,17 +27,32 @@ if (-not $PythonCmd) {
 
 Info "Installing CodeGenZ into $InstallDir"
 if (Test-Path $InstallDir) { Remove-Item -Recurse -Force $InstallDir }
-git clone --depth 1 $RepoUrl $InstallDir | Out-Null
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+git clone --depth 1 $RepoUrl $InstallDir *>&1 | ForEach-Object { Write-Host $_ }
+$cloneExit = $LASTEXITCODE
+$ErrorActionPreference = $prevEap
+if ($cloneExit -ne 0) { Fail "git clone failed (exit code $cloneExit)" }
 
 Info "Installing the genz CLI (pip --user)"
 Set-Location (Join-Path $InstallDir "compiler-py")
-& $PythonCmd -m pip install --user -e . 2>$null
-if ($LASTEXITCODE -ne 0) {
+
+# pip writes harmless warnings (e.g. "script not on PATH") to stderr,
+# and PowerShell's "Stop" preference turns ANY stderr line from a
+# native command into a terminating error. Relax it just for the pip
+# calls and judge success by exit code instead.
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& $PythonCmd -m pip install --user -e . *>&1 | ForEach-Object { Write-Host $_ }
+$pipExit = $LASTEXITCODE
+if ($pipExit -ne 0) {
     # modern Python installs may refuse system-wide installs (PEP 668);
     # --user -e into our own prefix is safe to override
-    & $PythonCmd -m pip install --user --break-system-packages -e .
-    if ($LASTEXITCODE -ne 0) { Fail "pip install failed" }
+    & $PythonCmd -m pip install --user --break-system-packages -e . *>&1 | ForEach-Object { Write-Host $_ }
+    $pipExit = $LASTEXITCODE
 }
+$ErrorActionPreference = $prevEap
+if ($pipExit -ne 0) { Fail "pip install failed (exit code $pipExit)" }
 
 $UserBase = (& $PythonCmd -m site --user-base).Trim()
 $ScriptsDir = Join-Path $UserBase "Scripts"
