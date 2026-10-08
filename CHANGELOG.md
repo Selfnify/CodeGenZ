@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.1.0
+
+- Added the `when`/action language — CodeGenZ's own logic layer:
+  `when click #id:` blocks with `set`, `increase`/`decrease`,
+  `show`/`hide`, `add/remove/toggle class`, `alert`, `log`, and
+  `if`/`else`. No `document.getElementById` or `function` keyword
+  required in source anymore.
+- `hello.gz` and `counter.gz` rewritten to use it.
+- `docs/SYNTAX.md` expanded with the full action-language reference.
+- Note: `compiler-js` does not have this feature yet — `compiler-py`
+  is the complete implementation as of this release.
+
 ## v1.0.0
 
 First tagged release.
