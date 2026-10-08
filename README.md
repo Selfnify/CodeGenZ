@@ -24,14 +24,14 @@ box .title:
   h1 "Welcome to CodeGenZ"
   p "the easy way to build the web"
 
-button "Click me" click handleClick()
+button "Click me" #clickbtn
 
-script:
-  function handleClick() {
-    clicks = clicks + 1
-    console.log(clicks)
-  }
+when click #clickbtn:
+  increase clicks by 1
+  log clicks
 ```
+
+No `document.getElementById`, no `function` keyword, no semicolons.
 
 ...and get a real, static, zero-dependency website out the other end.
 Open the output `index.html` in a browser. That's the whole deploy
@@ -51,9 +51,13 @@ nothing here you can't fully read in an afternoon — see
 | [`compiler-py/`](compiler-py) | Python ≥3.8, stdlib only | `genz.cli` |
 | [`compiler-js/`](compiler-js) | Node.js, zero deps | `src/cli.js` |
 
-Both implement the exact same lexer → parser → codegen pipeline and
-produce **byte-identical output** on every example in this repo. Use
-whichever fits your stack; pick on vibes otherwise.
+Both implement the same lexer → parser → codegen pipeline. As of
+v1.0.0, **`compiler-py` is ahead**: it has the `when`/action language
+(see below); `compiler-js` still has everything except that one
+feature, so `hello.gz` and `counter.gz` (which now use `when` blocks)
+will currently fail to build with the Node compiler until it's ported.
+`landing.gz` still builds fine on both. Use `compiler-py` if you want
+the full language today.
 
 ## Install
 
@@ -152,7 +156,10 @@ CodeGenZ/
   (`bg`, `pad`, `round`, `center`, ...) — real CSS property names also
   pass straight through.
 - `var name = value` becomes a `let` in the generated JS.
-- `script:` is a raw-JS escape hatch for anything the shorthand
+- `when click #id:` + plain actions (`increase`, `set text of`, `if`/
+  `else`, ...) is CodeGenZ's own logic language — no
+  `document.getElementById`, no `function`, no raw JS required.
+- `script:` is a raw-JS escape hatch for anything the action language
   doesn't cover yet.
 
 Full details, including the shorthand property table and supported

@@ -27,27 +27,21 @@ style:
 
 var count = 0
 
-h1 "Counter" .count #count-display
+h1 "0" .count #count-display
 
 box .row:
-  button "-" .btn click decrement()
-  button "reset" .btn click reset()
-  button "+" .btn click increment()
+  button "-" .btn #dec
+  button "reset" .btn #reset
+  button "+" .btn #inc
 
-script:
-  function render() {
-    document.getElementById("count-display").textContent = count
-  }
-  function increment() {
-    count = count + 1
-    render()
-  }
-  function decrement() {
-    count = count - 1
-    render()
-  }
-  function reset() {
-    count = 0
-    render()
-  }
-  render()
+when click #inc:
+  increase count by 1
+  set text of #count-display to count
+
+when click #dec:
+  decrease count by 1
+  set text of #count-display to count
+
+when click #reset:
+  set count to 0
+  set text of #count-display to count

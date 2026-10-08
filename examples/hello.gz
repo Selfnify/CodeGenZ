@@ -26,11 +26,9 @@ box .title:
   p "the easy way to build the web" .subtitle
 
 box .actions:
-  button "Click me" .btn click handleClick()
-  span "" #counter
+  button "Click me" .btn #clickbtn
+  span "0 clicks" #counter
 
-script:
-  function handleClick() {
-    clicks = clicks + 1
-    document.getElementById("counter").textContent = "clicks: " + clicks
-  }
+when click #clickbtn:
+  increase clicks by 1
+  set text of #counter to clicks + " clicks"

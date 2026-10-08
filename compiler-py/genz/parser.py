@@ -8,7 +8,10 @@ the token list and build up a Program AST.
 
 from typing import List, Tuple, Optional
 from .lexer import Token
-from .ast_nodes import Program, StyleRule, StyleDecl, Element, VarDecl
+from .ast_nodes import (
+    Program, StyleRule, StyleDecl, Element, VarDecl,
+    ActSet, ActAdjust, ActVisibility, ActClass, ActCall, ActIf, WhenBlock,
+)
 
 EVENT_VERBS = {
     "click", "hover", "submit", "change", "input", "load",
@@ -110,6 +113,8 @@ class Parser:
                 prog.raw_script_lines.extend(self._parse_script_block())
             elif tok.kind == "WORD" and tok.value == "var":
                 prog.vars.append(self._parse_var())
+            elif tok.kind == "WORD" and tok.value == "when" and self.peek(1).kind == "WORD":
+                prog.when_blocks.append(self._parse_when_block())
             elif tok.kind == "WORD" and tok.value == "box" and self.peek(1).kind != "NEWLINE":
                 prog.body.append(self._parse_box())
             elif tok.kind == "WORD":
@@ -134,6 +139,115 @@ class Parser:
         rest = self.line_tokens()
         self.expect("NEWLINE")
         return VarDecl(name=name_tok.value, expr=raw_join(rest), line=line)
+
+    # -- the `when ... :` action language ------------------------------
+    def _parse_when_block(self) -> WhenBlock:
+        line = self.peek().line
+        self.advance()  # 'when'
+        event_tok = self.expect("WORD")
+        sel_tok = self.expect("WORD")
+        self.expect("COLON")
+        self.expect("NEWLINE")
+        self.expect("INDENT")
+        actions = self._parse_actions()
+        self.expect("DEDENT")
+        return WhenBlock(event=event_tok.value, selector=sel_tok.value, actions=actions, line=line)
+
+    def _parse_actions(self) -> list:
+        actions = []
+        while self.peek().kind != "DEDENT":
+            self.skip_newlines()
+            if self.peek().kind == "DEDENT":
+                break
+            actions.append(self._parse_action_stmt())
+            self.skip_newlines()
+        return actions
+
+    def _parse_action_stmt(self):
+        tok = self.peek()
+        line = tok.line
+
+        if tok.kind != "WORD":
+            raise ParseError(f"expected an action, got {tok.value!r}", line)
+
+        if tok.value == "set":
+            self.advance()
+            w2 = self.peek()
+            if w2.kind == "WORD" and w2.value in ("text", "value") and self.peek(1).value == "of":
+                kind = w2.value
+                self.advance()  # text/value
+                self.advance()  # 'of'
+                target_tok = self.expect("WORD")
+                of_to = self.expect("WORD")
+                if of_to.value != "to":
+                    raise ParseError("expected 'to' in set statement", line)
+                rest = self.line_tokens()
+                self.expect("NEWLINE")
+                return ActSet(target=f"{kind}:{target_tok.value.lstrip('#')}", expr=raw_join(rest), line=line)
+            else:
+                name_tok = self.expect("WORD")
+                to_tok = self.expect("WORD")
+                if to_tok.value != "to":
+                    raise ParseError("expected 'to' in set statement", line)
+                rest = self.line_tokens()
+                self.expect("NEWLINE")
+                return ActSet(target=name_tok.value, expr=raw_join(rest), line=line)
+
+        if tok.value in ("increase", "decrease"):
+            self.advance()
+            name_tok = self.expect("WORD")
+            expr = "1"
+            if self.peek().kind == "WORD" and self.peek().value == "by":
+                self.advance()
+                rest = self.line_tokens()
+                expr = raw_join(rest)
+            self.expect("NEWLINE")
+            return ActAdjust(name=name_tok.value, op=tok.value, expr=expr, line=line)
+
+        if tok.value in ("show", "hide"):
+            self.advance()
+            target_tok = self.expect("WORD")
+            self.expect("NEWLINE")
+            return ActVisibility(target_id=target_tok.value.lstrip("#"), show=(tok.value == "show"), line=line)
+
+        if tok.value in ("add", "remove", "toggle") and self.peek(1).kind == "WORD" and self.peek(1).value == "class":
+            op = tok.value
+            self.advance()
+            self.advance()  # 'class'
+            cls_tok = self.expect("STRING")
+            on_tok = self.expect("WORD")
+            if on_tok.value != "on":
+                raise ParseError("expected 'on' in class statement", line)
+            target_tok = self.expect("WORD")
+            self.expect("NEWLINE")
+            return ActClass(op=op, cls=cls_tok.value, target_id=target_tok.value.lstrip("#"), line=line)
+
+        if tok.value in ("alert", "log"):
+            self.advance()
+            rest = self.line_tokens()
+            self.expect("NEWLINE")
+            return ActCall(kind=tok.value, expr=raw_join(rest), line=line)
+
+        if tok.value == "if":
+            self.advance()
+            cond_toks = self.line_tokens()
+            self.expect("COLON")
+            self.expect("NEWLINE")
+            self.expect("INDENT")
+            then_actions = self._parse_actions()
+            self.expect("DEDENT")
+            else_actions = []
+            self.skip_newlines()
+            if self.peek().kind == "WORD" and self.peek().value == "else":
+                self.advance()
+                self.expect("COLON")
+                self.expect("NEWLINE")
+                self.expect("INDENT")
+                else_actions = self._parse_actions()
+                self.expect("DEDENT")
+            return ActIf(cond=raw_join(cond_toks), then=then_actions, else_=else_actions, line=line)
+
+        raise ParseError(f"unknown action {tok.value!r}", line)
 
     def _parse_script_block(self) -> List[str]:
         self.advance()  # 'script'

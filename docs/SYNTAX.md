@@ -31,7 +31,7 @@ A single line can mix, in any order:
 | `"text"` | the element's text content (first string wins) |
 | `.class` / `#id` | can be chained: `.card.highlight#main` |
 | `attr="value"` | any HTML attribute, e.g. `href="/"`, `placeholder="name"` |
-| `click <js>` | wires an event straight to raw JS (see Events) |
+| `click <raw js>` | advanced: wires straight to a raw JS expression. For the easy way, give the element an `#id` and handle the event in a `when` block instead (see below) |
 
 ## `box`
 
@@ -104,19 +104,6 @@ Some properties don't need a value — just write the word:
 | `pointer` | `cursor: pointer;` |
 | `rounded` | `border-radius: 9999px;` |
 
-## Events
-
-Any element line can end with an event verb followed by a raw JS
-expression, which becomes an inline `on*` attribute:
-
-```
-button "Save" click saveForm()
-input onchange handleTyping(this.value)
-```
-
-Supported verbs: `click, hover, submit, change, input, load, dblclick,
-keyup, keydown, mouseover, mouseout, focus, blur`.
-
 ## `var`
 
 Top-level variables become `let` declarations in the generated JS:
@@ -126,16 +113,64 @@ var count = 0
 var name = "ZenX"
 ```
 
+## `when` — CodeGenZ's own logic language
+
+This is the part that replaces writing JavaScript. No
+`document.getElementById`, no `function`, no `addEventListener` —
+just plain action statements.
+
+```
+when click #clickbtn:
+  increase clicks by 1
+  set text of #counter to clicks + " clicks"
+```
+
+`when <event> <#id or .class>:` opens a block; everything indented
+under it runs when that event fires. Supported events: `click, hover,
+submit, change, input, load, dblclick, keyup, keydown, mouseover,
+mouseout, focus, blur`.
+
+### Actions
+
+| action | what it does |
+|---|---|
+| `set <var> to <expr>` | assigns a variable |
+| `set text of #id to <expr>` | sets an element's text content |
+| `set value of #id to <expr>` | sets an input's value |
+| `increase <var> by <n>` | adds `n` (default `1` if `by ...` omitted) |
+| `decrease <var> by <n>` | subtracts `n` |
+| `show #id` / `hide #id` | toggles an element's visibility |
+| `add class "x" on #id` | adds a CSS class |
+| `remove class "x" on #id` | removes a CSS class |
+| `toggle class "x" on #id` | toggles a CSS class |
+| `alert <expr>` | browser alert popup |
+| `log <expr>` | `console.log` |
+| `if <condition>:` / `else:` | branching, nested actions indented under each |
+
+`<expr>` and `<condition>` accept the same kind of expressions you'd
+write in JS (`clicks + 1`, `count > 5`, `name == "ZenX"`) — the
+shorthand actions handle the boilerplate, the expression itself still
+needs real operators when you need one.
+
+```
+when click #submit-btn:
+  if score > 10:
+    set text of #result to "nice one"
+    add class "win" on #result
+  else:
+    set text of #result to "try again"
+```
+
 ## `script`
 
-Your escape hatch. Anything indented under `script:` is emitted into
-`script.js` close to verbatim — write real JavaScript here, including
-functions your `click` handlers call.
+The escape hatch for anything the action language doesn't cover yet.
+Anything indented under `script:` is emitted into `script.js` close to
+verbatim — write real JavaScript here if you need it.
 
 ```
 script:
-  function saveForm() {
-    console.log("saving...")
+  function customThing() {
+    console.log("going off-script")
   }
 ```
 

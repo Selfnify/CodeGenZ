@@ -26,5 +26,5 @@ def compile_source(source: str, html_filename="index.html", css_filename="style.
     program = parse(tokens)
     html = generate_html(program.title, program.body, css_filename, js_filename)
     css = generate_css(program.style_rules)
-    js = generate_js(program.vars, program.raw_script_lines)
+    js = generate_js(program.vars, program.raw_script_lines, program.when_blocks)
     return html, css, js
